@@ -88,11 +88,11 @@ Route::prefix('admin')->group(function () {
 });
 Route::middleware('auth')->group(function () {
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
-    Route::get('/chon-ghe/{booking_id}', [BookingController::class, 'selectSeats'])->name('select_seats');
-    Route::get('/chon-ghe', [BookingController::class, 'selectSeats'])->name('select_seats.no_id');
 
-    Route::get('/seats', [SeatController::class, 'index']);
-    Route::get('/seats/{showtime_id}', [SeatController::class, 'showSeats'])->name('seats.select');
+    Route::get('/chon-ghe/{booking_id}', [BookingController::class, 'selectSeatsPage'])->name('booking.seats');
+    Route::post('/confirm-seats', [BookingController::class, 'confirmSeats'])->name('booking.confirm');
+
+    Route::get('/seats/{showtime_id}', [SeatController::class, 'showSeatsByShowtime'])->name('seats.show_by_showtime');
     //Confirm
     Route::post('/confirm-seats', [BookingController::class, 'confirmSeats'])->name('confirm.seats');
 

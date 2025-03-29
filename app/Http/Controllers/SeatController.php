@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class SeatController extends Controller
 {
-    public function showSeats($showtime_id)
+    public function showSeatsByShowtime($showtime_id)
     {
         $showtime = Showtime::findOrFail($showtime_id);
 

@@ -101,7 +101,7 @@
               <hr class="border-warning">
               <p class="fs-4"><strong class="text-warning">Tổng cộng:</strong> <span class="text-warning">{{ number_format($totalAmount, 0, ',', '.') }}đ</span></p>
             </div>
-          </div>
+        </div>
       
           <!-- Form xác nhận thanh toán -->
         <div class="info-box mb-4">

@@ -122,7 +122,7 @@ class BookingController extends Controller
         return response()->json(['message' => 'Booking deleted'], 200);
     }
 
-    public function confirmSeats(Request $request)
+    public function selectSeatsPage(Request $request)
     {
         // Lấy dữ liệu từ request
         $selectedSeats = $request->input('seats', []);

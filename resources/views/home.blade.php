@@ -45,7 +45,7 @@
     <div class="container mt-3">
     <div class="quick-booking">
         <h4 class="title">🎟️ ĐẶT VÉ</h4>
-        <form action="{{ route('select_seats') }}" method="GET">
+        <form action="{{ route('select_seats.no_id') }}" method="GET">
     <div class="booking-options">
         <!-- Chọn rạp -->
         <select class="form-select" name="theater_id" id="theater" required>
