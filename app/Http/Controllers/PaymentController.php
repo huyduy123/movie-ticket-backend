@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth; // ✅ Đúng
-
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -77,95 +77,137 @@ class PaymentController extends Controller
         return redirect()->route('admin.payments')->with('success', 'Giao dịch thanh toán đã được xóa!');
     }
 
-    public function paymentWithMomo(Request $request)
+    public function paymentWithPayOS(Request $request)
     {
-        if (Auth::check()) {
-            $userId = Auth::id(); // Hoạt động y chang auth()->id()
-        }
-        // 1. Tạo booking
+        $userId = Auth::id();
+
         $booking = Booking::create([
             'user_id' => $userId,
-            // hoặc auth()->id()
             'showtime_id' => $request->showtime_id,
             'total_price' => $request->total_amount,
-            'status'      => 'pending',
+            'status' => 'pending',
         ]);
 
-        // 2. Tạo thông tin đơn hàng
-        $orderId     = 'BOOKING_' . $booking->id;
-        $amount      = (int) $booking->total_price;
-        $redirectUrl = env('MOMO_REDIRECT_URL');
-        $notifyUrl   = env('MOMO_NOTIFY_URL');
-        $partnerCode = env('MOMO_PARTNER_CODE');
-        $accessKey   = env('MOMO_ACCESS_KEY');
-        $secretKey   = env('MOMO_SECRET_KEY');
-        $requestId   = time() . "";
-        $orderInfo   = "Thanh toán vé xem phim";
-        $endpoint    = "https://test-payment.momo.vn/v2/gateway/api/create";
+        $orderId = 'BOOKING_' . $booking->id;
+        $amount = (int) $booking->total_price;
 
-        // 3. Tạo signature
-        $rawHash = "accessKey=$accessKey&amount=$amount&extraData=&ipnUrl=$notifyUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=captureWallet";
-        $signature = hash_hmac("sha256", $rawHash, $secretKey);
+        $clientId = env('PAYOS_CLIENT_ID');
+        $apiKey = env('PAYOS_API_KEY');
+        $checksumKey = env('PAYOS_CHECKSUM_KEY');
 
-        // 4. Dữ liệu gửi MoMo
-        $body = [
-            'partnerCode' => $partnerCode,
-            'accessKey' => $accessKey,
-            'requestId' => $requestId,
+        $extraData = json_encode($request->seats, JSON_UNESCAPED_UNICODE);
+        $expiredAt = now()->addMinutes(10)->timestamp;
+
+        $returnUrl = route('payment.success');
+        $cancelUrl = route('payment.cancel');
+
+        // 👉 raw signature theo định dạng PayOS
+        $rawSignature = implode('', [
+            $orderId,
+            $amount,
+            'Thanh toán đơn hàng đặt vé xem phim',
+            $returnUrl,
+            $cancelUrl,
+            $extraData,
+            $expiredAt
+        ]);
+
+        $signature = hash_hmac('sha256', $rawSignature, $checksumKey);
+
+        $payload = [
+            'orderCode' => $orderId,
             'amount' => $amount,
-            'orderId' => $orderId,
-            'orderInfo' => $orderInfo,
-            'redirectUrl' => $redirectUrl,
-            'ipnUrl' => $notifyUrl,
-            'lang' => 'vi',
-            'extraData' => '',
-            'requestType' => 'captureWallet',
-            'signature' => $signature
+            'description' => 'Thanh toán đơn hàng đặt vé xem phim',
+            'buyerName' => 'Nguyen Van A',
+            'buyerEmail' => 'nguyenvana@example.com',
+            'buyerPhone' => '0901234567',
+            'buyerAddress' => '123 Nguyễn Huệ, Quận 1, TP.HCM',
+            'items' => [
+                [
+                    'name' => 'Vé xem phim',
+                    'quantity' => count($request->seats),
+                    'price' => $amount,
+                ]
+            ],
+            'returnUrl' => route('payment.success'),
+            'cancelUrl' => route('payment.cancel'),
+            'extraData' => json_encode($request->seats),
+            'expiredAt' => now()->addMinutes(10)->timestamp,
         ];
 
-        // 5. Gửi request
-        $response = Http::post($endpoint, $body)->json();
 
-        // 6. Lấy link QR
-        $qrUrl = $response['images/qr-code'] ?? null;
+        $response = Http::withHeaders([
+            'x-client-id' => $clientId,
+            'x-api-key' => $apiKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api-merchant.payos.vn/v2/payment-requests', $payload);
 
-        return view('payment.momo', [
-            'qrUrl'   => $qrUrl,
+        if ($response->failed()) {
+            return redirect()->back()->with('error', 'Không thể tạo đơn hàng thanh toán.');
+        }
+
+        $responseData = $response->json();
+
+        if (!isset($responseData['checkoutUrl'])) {
+            return redirect()->route('payment.payos')->with('error', 'Không nhận được link thanh toán từ PayOS.');
+        }
+
+
+        return view('payment.payos', [
+            'checkoutUrl' => $responseData['checkoutUrl'],
             'orderId' => $orderId,
-            'amount'  => $amount,
+            'amount' => $amount,
         ]);
     }
 
-    public function handleMomoIPN(Request $request)
+
+    public function handlePayOSWebhook(Request $request)
     {
-        $orderId = $request->input('orderId'); // ví dụ: BOOKING_12
-        $resultCode = $request->input('resultCode'); // 0 = thành công
+        $orderCode = $request->input('orderCode');
+        $status = $request->input('status'); // SUCCEEDED, CANCELLED
 
-        // Giả sử bạn lưu orderId dưới dạng: BOOKING_{booking_id}
-        if (!str_starts_with($orderId, 'BOOKING_')) {
-            return response('Invalid Order ID', 400);
+        if (!str_starts_with($orderCode, 'BOOKING_')) {
+            return response('Invalid Order Code', 400);
         }
 
-        $bookingId = (int) str_replace('BOOKING_', '', $orderId);
+        $bookingId = (int) str_replace('BOOKING_', '', $orderCode);
         $booking = Booking::find($bookingId);
+        if (!$booking) return response('Booking not found', 404);
 
-        if (!$booking) {
-            return response('Booking not found', 404);
-        }
-
-        if ($resultCode == 0) {
+        if ($status === 'SUCCEEDED') {
             $booking->status = 'paid';
-            $booking->updated_at = now();
             $booking->save();
-        } else {
-            $booking->status = 'failed';
+
+            // Thêm dữ liệu vào booking_details từ danh sách seat_id
+            $seatIds = json_decode($request->input('extraData'));
+            foreach ($seatIds as $seatId) {
+                $seat = \App\Models\Seat::find($seatId);
+                if ($seat) {
+                    DB::table('booking_details')->insert([
+                        'booking_id' => $booking->id,
+                        'seat_id' => $seat->id,
+                        'price' => $seat->price,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        } elseif ($status === 'CANCELLED') {
+            $booking->status = 'canceled';
             $booking->save();
         }
 
         return response('OK', 200);
     }
+
+
     public function paymentSuccess()
     {
         return view('payment.success');
+    }
+
+    public function paymentCancel()
+    {
+        return view('payment.cancel');
     }
 }

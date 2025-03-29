@@ -124,32 +124,33 @@ class BookingController extends Controller
 
     public function confirmSeats(Request $request)
     {
+        // Lấy dữ liệu từ request
         $selectedSeats = $request->input('seats', []);
-        $theater_id = $request->input('theater_id');
         $movie_id = $request->input('movie_id');
-        $date = $request->input('date');
+        $theater_id = $request->input('theater_id');
         $showtime_id = $request->input('showtime_id');
+        $date = $request->input('date');
         $comboInputs = $request->input('combo', []);
         $totalAmount = $request->input('total_amount');
 
-        // Kiểm tra thông tin đầu vào
-        if (!$movie_id || !$theater_id || !$date || !$showtime_id || empty($selectedSeats)) {
-            return redirect()->back()->withErrors('Thiếu thông tin. Vui lòng thử lại!');
+        // Validate cơ bản
+        if (!$movie_id || !$theater_id || !$showtime_id || !$date || empty($selectedSeats)) {
+            return redirect()->back()->withErrors('Thiếu thông tin đầu vào. Vui lòng chọn đầy đủ!');
         }
 
-        // Lấy dữ liệu từ database
         try {
+            // Lấy dữ liệu từ DB
             $movie = Movie::findOrFail($movie_id);
             $theater = Theater::findOrFail($theater_id);
             $showtime = Showtime::findOrFail($showtime_id);
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors('Không thể tìm thấy thông tin. Vui lòng thử lại!');
+            return redirect()->back()->withErrors('Không thể tìm thấy dữ liệu. Vui lòng thử lại!');
         }
 
         // Xử lý combo
         $selectedComboDetails = [];
         foreach ($comboInputs as $comboId => $quantity) {
-            $quantity = intval($quantity);
+            $quantity = (int)$quantity;
             if ($quantity > 0) {
                 $combo = Combo::find($comboId);
                 if ($combo) {
@@ -162,7 +163,7 @@ class BookingController extends Controller
             }
         }
 
-        // Trả về view xác nhận
+        // Trả về view xác nhận ghế
         return view('confirm_seats', [
             'selectedSeats' => $selectedSeats,
             'movie' => $movie,

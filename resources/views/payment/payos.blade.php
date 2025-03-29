@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thanh Toán MoMo</title>
+    <title>Thanh Toán PayOS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -16,8 +16,9 @@
             padding: 2rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        .qr-box img {
-            max-width: 300px;
+        .qr-box iframe {
+            width: 100%;
+            height: 500px;
             border: 6px solid #e83e8c;
             border-radius: 1rem;
         }
@@ -53,7 +54,9 @@
                 </p>
                 <p><strong>Mã đơn hàng:</strong> <br>{{ $orderId }}</p>
                 <p><strong>Mô tả:</strong> <br>Thanh toán đơn hàng đặt vé xem phim</p>
-                <p><strong>Số tiền:</strong> <br class="d-md-none"><span class="text-danger fs-4 fw-bold">{{ number_format($amount, 0, ',', '.') }}đ</span></p>
+                <p><strong>Số tiền:</strong> <br class="d-md-none">
+                    <span class="text-danger fs-4 fw-bold">{{ number_format($amount, 0, ',', '.') }}đ</span>
+                </p>
                 <div class="text-center mt-4">
                     <div id="countdown" class="timer">Đơn hàng sẽ hết hạn sau: <span id="minutes">10</span>:<span id="seconds">00</span></div>
                 </div>
@@ -63,13 +66,12 @@
             </div>
         </div>
 
-        <!-- Cột phải: QR code -->
+        <!-- Cột phải: QR code (iframe PayOS) -->
         <div class="col-md-6 text-center">
             <div class="payment-box qr-box">
                 <h4 class="qr-heading fw-bold mb-4">Quét mã QR để thanh toán</h4>
-                <img src="{{ $qrUrl }}" alt="QR Code Momo" class="img-fluid mb-3">
-                <p>Sử dụng <strong>App MoMo</strong> hoặc ứng dụng camera hỗ trợ để quét mã</p>
-                <p class="text-muted">Gặp khó khăn khi thanh toán? <a href="#">Xem hướng dẫn</a></p>
+                <iframe src="{{ $checkoutUrl }}" frameborder="0"></iframe>
+                <p class="text-muted mt-3">Sử dụng App PayOS hoặc Momo, ViettelPay... để quét mã</p>
             </div>
         </div>
     </div>

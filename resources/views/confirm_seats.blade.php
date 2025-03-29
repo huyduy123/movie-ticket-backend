@@ -104,31 +104,39 @@
           </div>
       
           <!-- Form xác nhận thanh toán -->
-          <div class="info-box mb-4">
+        <div class="info-box mb-4">
             <h4 class="text-warning mb-4"><i class="fas fa-credit-card me-2"></i>Chọn Phương Thức Thanh Toán</h4>
-            <form action="{{ route('payment.momo') }}" method="POST">
+            <form method="POST" action="{{ route('payment.payos') }}">
                 @csrf
                 <input type="hidden" name="movie_id" value="{{ $movie->id }}">
                 <input type="hidden" name="theater_id" value="{{ $theater->id }}">
                 <input type="hidden" name="date" value="{{ $date }}">
                 <input type="hidden" name="showtime_id" value="{{ $showtime->id }}">
                 <input type="hidden" name="total_amount" value="{{ $totalAmount }}">
+            
+                {{-- Truyền danh sách ghế --}}
                 @foreach ($selectedSeats as $seat)
                     <input type="hidden" name="seats[]" value="{{ $seat }}">
                 @endforeach
+            
+                {{-- Truyền combo nếu có --}}
                 @foreach ($selectedComboDetails as $combo)
                     <input type="hidden" name="combo[{{ $combo['combo']->id }}]" value="{{ $combo['quantity'] }}">
                 @endforeach
-
+            
                 <div class="form-check mb-3">
-                    <input class="form-check-input" type="radio" name="payment_method" id="momo" value="momo" checked>
-                    <label class="form-check-label" for="momo">
-                        <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" width="80" alt="MoMo"> Thanh toán qua MoMo
+                    <input class="form-check-input" type="radio" name="payment_method" id="payos" value="payos" checked>
+                    <label class="form-check-label" for="payos">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/PayOS_Logo_2024.png" width="80" alt="PayOS">
+                        Thanh toán qua PayOS
                     </label>
                 </div>
-
-                <button type="submit" class="btn btn-warning btn-lg px-5 py-3 fw-bold shadow">Tiến Hành Thanh Toán</button>
+            
+                <button type="submit" class="btn btn-warning btn-lg px-5 py-3 fw-bold shadow">
+                    Tiến Hành Thanh Toán
+                </button>
             </form>
+            
         </div>
     </div>
 </main>
