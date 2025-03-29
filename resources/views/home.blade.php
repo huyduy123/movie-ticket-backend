@@ -47,45 +47,46 @@
         <h4 class="title">🎟️ ĐẶT VÉ</h4>
         <form action="{{ route('booking.store') }}" method="POST">
             @csrf
-    <div class="booking-options">
-        <!-- Chọn rạp -->
-        <select class="form-select" name="theater_id" id="theater" required>
-            <option selected disabled value="">1. Chọn Rạp</option>
-            @foreach ($theaters as $theater)
-                <option value="{{ $theater->id }}">{{ $theater->name }}</option>
-            @endforeach
-        </select>
-
-        <!-- Chọn phim -->
-        <select class="form-select" name="movie_id" id="movie" required>
-            <option selected disabled value="">2. Chọn Phim</option>
-            @foreach ($movies as $movie)
-                <option value="{{ $movie->id }}">{{ $movie->title }}</option>
-            @endforeach
-        </select>
-
-        <!-- Chọn ngày -->
-        <select class="form-select" name="date" id="date" required>
-            <option selected disabled value="">3. Chọn Ngày</option>
-            @foreach ($showtimes->unique('start_time') as $showtime)
-                <option value="{{ date('Y-m-d', strtotime($showtime->start_time)) }}">
-                    {{ date('d-m-Y', strtotime($showtime->start_time)) }}
-                </option>
-            @endforeach
-        </select>
-
-        <!-- Chọn suất chiếu -->
-        <select class="form-select" name="showtime_id" id="showtime" required>
-            <option selected disabled value="">4. Chọn Suất</option>
-            @foreach ($showtimes as $showtime)
-                <option value="{{ $showtime->id }}">{{ date('H:i', strtotime($showtime->start_time)) }}</option>
-            @endforeach
-        </select>
-
-        <!-- Nút đặt vé -->
-        <button type="submit" class="btn btn-purple">ĐẶT NGAY</button>
-    </div>
-</form>
+            <div class="booking-options">
+                <!-- Chọn rạp -->
+                <select class="form-select" name="theater_id" id="theater" required>
+                    <option selected disabled value="">1. Chọn Rạp</option>
+                    @foreach ($theaters as $theater)
+                        <option value="{{ $theater->id }}">{{ $theater->name }}</option>
+                    @endforeach
+                </select>
+        
+                <!-- Chọn phim -->
+                <select class="form-select" name="movie_id" id="movie" required>
+                    <option selected disabled value="">2. Chọn Phim</option>
+                    @foreach ($movies as $movie)
+                        <option value="{{ $movie->id }}">{{ $movie->title }}</option>
+                    @endforeach
+                </select>
+        
+                <!-- Chọn ngày -->
+                <select class="form-select" name="date" id="date" required>
+                    <option selected disabled value="">3. Chọn Ngày</option>
+                    @foreach ($showtimes->unique('start_time') as $showtime)
+                        <option value="{{ date('Y-m-d', strtotime($showtime->start_time)) }}">
+                            {{ date('d-m-Y', strtotime($showtime->start_time)) }}
+                        </option>
+                    @endforeach
+                </select>
+        
+                <!-- Chọn suất chiếu -->
+                <select class="form-select" name="showtime_id" id="showtime" required>
+                    <option selected disabled value="">4. Chọn Suất</option>
+                    @foreach ($showtimes as $showtime)
+                        <option value="{{ $showtime->id }}">{{ date('H:i', strtotime($showtime->start_time)) }}</option>
+                    @endforeach
+                </select>
+        
+                <!-- Nút đặt vé -->
+                <button type="submit" class="btn btn-purple">ĐẶT NGAY</button>
+            </div>
+        </form>
+        
 
     </div>
     </div>
