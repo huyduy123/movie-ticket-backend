@@ -20,7 +20,10 @@ Route::get('/auth/google/callback', [LoginGoogleController::class, 'handleGoogle
 
 
 // 🏠 Route Trang Chủ
-Route::get('/home', [MovieController::class, 'index'])->name('home');
+Route::get('/', function () {
+    return redirect('/home');
+});
+
 
 
 // 🟢 Authentication (Đăng nhập, Đăng ký)
