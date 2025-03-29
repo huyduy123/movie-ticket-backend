@@ -14,9 +14,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\SeatController;
 
-Route::get('/', function () {
-    return view('welcome'); // hoặc view khác nếu bạn có
-});
+
 Route::get('/auth/google', [LoginGoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [LoginGoogleController::class, 'handleGoogleCallback']);
 
